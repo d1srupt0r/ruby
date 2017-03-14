@@ -30,12 +30,14 @@ ARGV.each do |arg|
   case File.extname(arg)
     when ".csv"
       dates = []
+      # loop through each file
       CSV.foreach arg do |row|
         # row row row your boat
         r = row.inspect if row.inspect != "nil"
         header = r =~ /(2017)/
-        is_date = !(Date.parse r rescue nil).nil?
         dates = [] if header
+        is_date = !(Date.parse r rescue nil).nil?
+        # ToDo: don't filter out values, simply handle them differently
         next unless header or r.downcase.include? options[:user]
         pa r, "bbb" if header and options[:verbose]
         # loop once per weekday Mon-Fri
@@ -49,21 +51,28 @@ ARGV.each do |arg|
             next if color == "555"
             calendar.event do |e|
               d = dates[i - 1]
-              e.dtstart = Icalendar::Values::Date.new(d) if !d.nil?
+              e.description = "Created using JBLM Schedule Tool"
               e.dtend = Icalendar::Values::Date.new(d) if !d.nil?
-              e.summary = value
-              #e.description = "w00t w00t celebrate!?!"
+              e.dtstart = Icalendar::Values::Date.new(d) if !d.nil?
               e.ip_class = "PRIVATE"
+              e.location = "8050 Nco Beach Rd, Joint Base Lewis-McChord, WA 98433"
+              e.summary = value
             end
           end
         end
       end
-      File.write "#{options[:user]}.ics", calendar.to_ical
+      File.write "#{File.expand_path "~/Documents"}/#{options[:user]}.ics", calendar.to_ical
     when ".xls"
     when ".xlsx"
       xlsx = Roo::Excelx.new arg
       pa "Converting #{File.basename arg}...", "afa"
       xlsx.to_csv "#{File.expand_path "~/Documents"}/#{File.basename arg, ".*"}.csv"
+    when ".ics"
+      events = Icalendar::Event.parse File.open arg
+      events.each do |event|
+        pa "#{event.dtstart} #{event.summary}", "afa" if options[:verbose]
+      end
+      pa "Found #{events.length} events", "aaa"
     end
 end
 
