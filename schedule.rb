@@ -51,11 +51,11 @@ ARGV.each do |arg|
             next if color == "555"
             calendar.event do |e|
               d = dates[i - 1]
-              e.description = "Created using JBLM Schedule Tool"
+              e.description = ""
               e.dtend = Icalendar::Values::Date.new(d) if !d.nil?
               e.dtstart = Icalendar::Values::Date.new(d) if !d.nil?
               e.ip_class = "PRIVATE"
-              e.location = "8050 Nco Beach Rd, Joint Base Lewis-McChord, WA 98433"
+              e.location = ""
               e.summary = value
             end
           end
