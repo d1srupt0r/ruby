@@ -8,8 +8,9 @@ require 'roo'
 
 calendar = Icalendar::Calendar.new
 days = ["","THURSDAY","FRIDAY","SATURDAY","SUNDAY","MONDAY","TUESDAY","WEDNESDAY"]
-now = Time.new.strftime '"%-d-%b'
+#now = Time.new.strftime '"%-d-%b'
 options = { :user => Etc.getlogin }
+events = []
 
 OptionParser.new do |opts|
   opts.banner = "Usage: schedule.rb [options]"
@@ -42,7 +43,7 @@ ARGV.each do |arg|
         pa r, "bbb" if header and options[:verbose]
         # loop once per weekday Mon-Fri
         (1..7).each do |i|
-          value = row[i].inspect.gsub /"/,""
+          value = row[i].inspect.gsub(/"/,"")
           if is_date
             dates.push Date.parse "#{value}-17"
           else
@@ -68,12 +69,19 @@ ARGV.each do |arg|
       pa "Converting #{File.basename arg}...", "afa"
       xlsx.to_csv "#{File.expand_path "~/Documents"}/#{File.basename arg, ".*"}.csv"
     when ".ics"
-      events = Icalendar::Event.parse File.open arg
-      events.each do |event|
-        pa "#{event.dtstart} #{event.summary}", "afa" if options[:verbose]
+      ev = Icalendar::Event.parse File.open arg
+      ev.each do |e|
+        events.push e if !events.map(&:summary).include? e.summary
+        #pa "#{events.map(&:summary)}", "faa"
+        #pa "#{e.dtstart} #{e.summary}", "afa" if options[:verbose]
       end
-      pa "Found #{events.length} events", "aaa"
-    end
+      pa "Found #{ev.length} events in #{File.basename arg}", "aaa"
+  end
+end
+
+pa "There are #{events.length} events in total", "aaa" if events.length > 0
+events.each do |event|
+  pa "#{event.dtstart.strftime '%-d-%b'} #{event.summary}", "afa" if options[:verbose]
 end
 
 pa "Finished running at: #{Time.new}", "aaa"
