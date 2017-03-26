@@ -47,7 +47,7 @@ ARGV.each do |arg|
           if is_date
             dates.push Date.parse "#{value}-17"
           else
-            color = (["nil", "off", "available", "trip??", "?"].include? value.downcase) ? "555" : "afa";
+            color = value.downcase =~ /(.*[?]|nil|off|available)/ ? "555" : "afa"
             pa "#{i}) #{dates[i - 1]} #{days[i]}: #{value}", color if options[:verbose]
             next if color == "555"
             calendar.event do |e|
