@@ -47,16 +47,14 @@ ARGV.each do |arg|
           if is_date
             dates.push Date.parse "#{value}-17"
           else
-            color = value.downcase =~ /(.*[?]|nil|off|available)/ ? "555" : "afa"
+            color = value.downcase =~ /(.*[?]|nil|off$|available)/ ? "555" : "afa"
             pa "#{i}) #{dates[i - 1]} #{days[i]}: #{value}", color if options[:verbose]
             next if color == "555"
             calendar.event do |e|
               d = dates[i - 1]
-              e.description = ""
               e.dtend = Icalendar::Values::Date.new(d) if !d.nil?
               e.dtstart = Icalendar::Values::Date.new(d) if !d.nil?
               e.ip_class = "PRIVATE"
-              e.location = ""
               e.summary = value
             end
           end
@@ -71,17 +69,16 @@ ARGV.each do |arg|
     when ".ics"
       ev = Icalendar::Event.parse File.open arg
       ev.each do |e|
-        events.push e if !events.map(&:summary).include? e.summary
-        #pa "#{events.map(&:summary)}", "faa"
-        #pa "#{e.dtstart} #{e.summary}", "afa" if options[:verbose]
+        next if !(File.basename arg).downcase.include? options[:user]
+        events.push e if !events.map(&:uid).include? e.uid
       end
       pa "Found #{ev.length} events in #{File.basename arg}", "aaa"
   end
 end
 
-pa "There are #{events.length} events in total", "aaa" if events.length > 0
-events.each do |event|
-  pa "#{event.dtstart.strftime '%-d-%b'} #{event.summary}", "afa" if options[:verbose]
+events.sort_by(&:dtstart).each do |e|
+  pa "#{e.uid} #{e.dtstart} #{e.summary}", "afa" if options[:verbose]
 end
 
+pa "There are #{events.length} unique events", "aaa" if events.length > 0
 pa "Finished running at: #{Time.new}", "aaa"
